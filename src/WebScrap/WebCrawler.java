@@ -19,7 +19,7 @@ public class WebCrawler {
 
     private static final int MAX_DEPTH = 10;
     private Set<String> visitedUrls = new HashSet<>();
-    
+
     // ExecutorService responsável por gerenciar as threads utilizadas pelo robô
     private ExecutorService threadPool = Executors.newFixedThreadPool(10);
 
@@ -33,7 +33,7 @@ public class WebCrawler {
             return;
         }
         visitedUrls.add(url);
-        
+
         // Cria uma nova thread para realizar a busca por links na página
         Runnable task = () -> {
             try {
@@ -42,15 +42,19 @@ public class WebCrawler {
                 Set<String> links = extractLinks(pageContent);
                 for (String link : links) {
                     if (!visitedUrls.contains(link)) {
-                    	// Se o link não foi visitado, inicia uma nova busca na página
+                        // Se o link não foi visitado, inicia uma nova busca na página
                         startCrawling(link, depth + 1);
                     }
+                }
+                // Após buscar novos links, faz a busca por palavras-chave na página atual
+                if (searchForKeyword(pageContent, "Flamengo")) {
+                    System.out.println("Palavra-chave encontrada em " + url);
                 }
             } catch (IOException e) {
                 System.out.println("Erro ao visitar " + url);
             }
         };
-        
+
         // Adiciona a nova thread ao pool de threads
         threadPool.submit(task);
     }
@@ -85,6 +89,12 @@ public class WebCrawler {
         }
 
         return links;
+    }
+
+    private boolean searchForKeyword(String htmlContent, String keyword) {
+        Document doc = Jsoup.parse(htmlContent);
+        String text = doc.body().text();
+        return text.contains(keyword);
     }
 
 }
